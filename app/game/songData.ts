@@ -61,6 +61,10 @@ const lrcRaw = `[00:00.81] Tonight I'm gonna have myself a real good time
 [03:21.74] Ah, da, da, ah, ah
 [03:25.74] Ooh, ooh-ooh, ooh-ooh`;
 
+function stripPunctuation(s: string): string {
+  return s.replace(/[(),.!?;:"\-—…\[\]{}]/g, '').trim().replace(/\s+/g, ' ');
+}
+
 function parseLrc(raw: string): { text: string; startTime: number }[] {
   const lines = raw.split('\n');
   const entries: { text: string; startTime: number }[] = [];
@@ -74,7 +78,7 @@ function parseLrc(raw: string): { text: string; startTime: number }[] {
     const centis = parseInt(match[3], 10);
     const divisor = match[3].length === 2 ? 100 : 1000;
     const startTime = minutes * 60 + seconds + centis / divisor;
-    const text = match[4].trim();
+    const text = stripPunctuation(match[4].trim());
 
     if (!text) continue;
 

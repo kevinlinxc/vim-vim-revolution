@@ -55,7 +55,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
       <div className="flex flex-col h-full">
         <Editor
           height="100%"
-          defaultLanguage="plaintext"
+          defaultLanguage="python"
           theme="vs-dark"
           value={value}
           onChange={onEditorChange}
@@ -74,6 +74,10 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
             occurrencesHighlight: 'off',
             selectionHighlight: false,
             renderLineHighlight: 'none',
+            unicodeHighlight: {
+              ambiguousCharacters: false,
+              invisibleCharacters: false,
+            }
           }}
         />
         <div

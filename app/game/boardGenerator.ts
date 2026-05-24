@@ -1,47 +1,21 @@
 import type { LyricLine, LyricPosition } from './types';
-
-const FILLER_WORDS = [
-  'Lorem', 'ipsum', 'dolor', 'sit', 'amet', 'consectetur', 'adipiscing',
-  'elit', 'sed', 'do', 'eiusmod', 'tempor', 'incididunt', 'ut', 'labore',
-  'et', 'dolore', 'magna', 'aliqua', 'enim', 'ad', 'minim', 'veniam',
-  'quis', 'nostrud', 'exercitation', 'ullamco', 'laboris', 'nisi',
-  'aliquip', 'ex', 'ea', 'commodo', 'consequat', 'duis', 'aute',
-  'irure', 'reprehenderit', 'voluptate', 'velit', 'esse', 'cillum',
-  'fugiat', 'nulla', 'pariatur', 'excepteur', 'sint', 'occaecat',
-  'cupidatat', 'non', 'proident', 'sunt', 'culpa', 'qui', 'officia',
-  'deserunt', 'mollit', 'anim', 'id', 'est', 'laborum',
-];
+import { CODE_LINES } from './codeLines';
 
 function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function generateFillerLine(): string {
-  const wordCount = randomInt(2, 6);
-  const words: string[] = [];
-  for (let i = 0; i < wordCount; i++) {
-    words.push(FILLER_WORDS[randomInt(0, FILLER_WORDS.length - 1)]);
-  }
-  return words.join(' ');
+function generateCodeLine(): string {
+  return CODE_LINES[randomInt(0, CODE_LINES.length - 1)];
 }
 
-function generateLineWithLyric(lyricText: string): { line: string; startColumn: number; endColumn: number } {
-  const leftWordCount = randomInt(1, 3);
-  const rightWordCount = randomInt(1, 3);
+function insertLyricIntoCode(codeLine: string, lyricText: string): { line: string; startColumn: number; endColumn: number } {
+  const minCol = Math.max(2, Math.floor(codeLine.length * 0.15));
+  const maxCol = Math.max(minCol + 1, Math.floor(codeLine.length * 0.85));
+  const insertPos = randomInt(minCol, maxCol);
 
-  const leftWords: string[] = [];
-  for (let i = 0; i < leftWordCount; i++) {
-    leftWords.push(FILLER_WORDS[randomInt(0, FILLER_WORDS.length - 1)]);
-  }
-
-  const rightWords: string[] = [];
-  for (let i = 0; i < rightWordCount; i++) {
-    rightWords.push(FILLER_WORDS[randomInt(0, FILLER_WORDS.length - 1)]);
-  }
-
-  const leftPart = leftWords.join(' ') + ' ';
-  const rightPart = ' ' + rightWords.join(' ');
-
+  const leftPart = codeLine.substring(0, insertPos);
+  const rightPart = codeLine.substring(insertPos);
   const slot = '\u200B'.repeat(lyricText.length);
   const line = leftPart + slot + rightPart;
   const startColumn = leftPart.length + 1;
@@ -80,7 +54,8 @@ export function generateBoard(
   for (let line = 0; line < totalLines; line++) {
     if (lyricIdx < lyricCount && lineNumbers[lyricIdx] === line) {
       const lyricText = lyrics[lyricIdx].text;
-      const { line: lineText, startColumn, endColumn } = generateLineWithLyric(lyricText);
+      const codeLine = generateCodeLine();
+      const { line: lineText, startColumn, endColumn } = insertLyricIntoCode(codeLine, lyricText);
       board.push(lineText);
       lyricPositions.push({
         lineNumber: line,
@@ -89,7 +64,7 @@ export function generateBoard(
       });
       lyricIdx++;
     } else {
-      board.push(generateFillerLine());
+      board.push(generateCodeLine());
     }
   }
 

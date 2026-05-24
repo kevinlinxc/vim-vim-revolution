@@ -84,3 +84,13 @@ body {
 .lyric-green span {
   color: inherit !important;
 }
+
+.lyric-wrong {
+  color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.15) !important;
+  text-decoration: underline wavy #ef4444;
+}
+.lyric-wrong span {
+  color: inherit !important;
+  text-decoration: inherit !important;
+}

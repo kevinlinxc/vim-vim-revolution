@@ -15,7 +15,7 @@ export function useGameEngine(
 ) {
   const { state, dispatch } = useGame();
   const decorationIdsRef = useRef<string[]>([]);
-  const typedCountsRef = useRef<Map<number, number>>(new Map());
+  const typedTextRef = useRef<Map<number, string>>(new Map());
   const preActiveIndicesRef = useRef<Set<number>>(new Set());
   const audioEndedRef = useRef(false);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -32,7 +32,7 @@ export function useGameEngine(
     if (!model) return;
 
     const decorations: editor.IModelDeltaDecoration[] = [];
-    const typedCounts = typedCountsRef.current;
+    const typedByIndex = typedTextRef.current;
     const preActive = preActiveIndicesRef.current;
 
     for (let i = 0; i < lyrics.length; i++) {
@@ -43,10 +43,15 @@ export function useGameEngine(
       const completed = state.completedLyrics.has(i);
       const isActive = i === state.currentLyricIndex && state.phase !== 'idle' && state.phase !== 'countdown';
       const isWarning = preActive.has(i) && !isActive;
-      const typedCount = typedCounts.get(i) || 0;
       const target = lyrics[i].text;
+      const typed = (typedByIndex.get(i) || '').substring(0, target.length);
 
-      if (completed || typedCount >= target.length) {
+      let matchLen = 0;
+      while (matchLen < typed.length && matchLen < target.length && typed[matchLen] === target[matchLen]) {
+        matchLen++;
+      }
+
+      if (completed || matchLen >= target.length) {
         decorations.push({
           range: new mc.Range(line, pos.startColumn, line, pos.endColumn),
           options: { className: 'lyric-green' },
@@ -54,45 +59,58 @@ export function useGameEngine(
         continue;
       }
 
-      const remaining = target.substring(typedCount);
+      const hasStarted = typed.length > 0;
 
       let phClass: string;
       if (isActive) {
         phClass = 'lyric-placeholder-active';
-      } else if (isWarning) {
+      } else if (isWarning && !hasStarted) {
         phClass = 'lyric-placeholder-warning';
       } else {
         phClass = 'lyric-placeholder';
       }
 
       let slotClass: string;
-      if (typedCount > 0) {
+      if (hasStarted) {
         slotClass = isActive ? 'lyric-slot-active' : 'lyric-typing';
       } else {
         slotClass = isActive ? 'lyric-slot-active' : 'lyric-slot';
       }
 
-      if (typedCount > 0) {
+      const col = (c: number) => pos.startColumn + c;
+
+      if (matchLen > 0) {
         decorations.push({
-          range: new mc.Range(line, pos.startColumn, line, pos.startColumn + typedCount),
+          range: new mc.Range(line, col(0), line, col(matchLen)),
           options: { className: 'lyric-green' },
         });
       }
 
-      decorations.push({
-        range: new mc.Range(line, pos.startColumn + typedCount, line, pos.startColumn + typedCount),
-        options: {
-          showIfCollapsed: true,
-          before: {
-            content: remaining,
-            inlineClassName: phClass,
+      const wrongLen = typed.length - matchLen;
+      if (wrongLen > 0) {
+        decorations.push({
+          range: new mc.Range(line, col(matchLen), line, col(typed.length)),
+          options: { className: 'lyric-wrong' },
+        });
+      }
+
+      const remaining = target.substring(typed.length);
+      if (remaining) {
+        decorations.push({
+          range: new mc.Range(line, col(typed.length), line, col(typed.length)),
+          options: {
+            showIfCollapsed: true,
+            before: {
+              content: remaining,
+              inlineClassName: phClass,
+            },
+            beforeContentClassName: phClass,
           },
-          beforeContentClassName: phClass,
-        },
-      });
+        });
+      }
 
       decorations.push({
-        range: new mc.Range(line, pos.startColumn + typedCount, line, pos.endColumn),
+        range: new mc.Range(line, col(typed.length), line, pos.endColumn),
         options: { className: slotClass },
       });
     }
@@ -116,10 +134,10 @@ export function useGameEngine(
       const model = monacoEditor.getModel();
       if (!model) return;
 
-      const counts = typedCountsRef.current;
+      const typedByIndex = typedTextRef.current;
 
       for (let i = 0; i < totalLyrics; i++) {
-        if (state.completedLyrics.has(i) && counts.get(i) !== undefined) continue;
+        if (state.completedLyrics.has(i)) continue;
 
         const pos = state.lyricPositions[i];
         if (!pos) continue;
@@ -146,14 +164,14 @@ export function useGameEngine(
         const slotText = lineContent.substring(pos.startColumn - 1, pos.endColumn - 1);
         const typed = slotText.replace(/\u200B/g, '');
 
+        typedByIndex.set(i, typed);
+
         const target = lyrics[i].text;
         let matchLen = 0;
-        for (let j = 0; j < typed.length && j < target.length; j++) {
-          if (typed[j] === target[j]) matchLen++;
-          else break;
+        while (matchLen < typed.length && matchLen < target.length && typed[matchLen] === target[matchLen]) {
+          matchLen++;
         }
 
-        counts.set(i, matchLen);
         updateDecorations();
 
         if (matchLen >= target.length) {
@@ -254,7 +272,7 @@ export function useGameEngine(
   }, [audioRef, dispatch]);
 
   const startGame = useCallback(() => {
-    typedCountsRef.current = new Map();
+    typedTextRef.current = new Map();
     preActiveIndicesRef.current = new Set();
     dispatch({ type: 'START_COUNTDOWN' });
 
@@ -295,7 +313,7 @@ export function useGameEngine(
     if (countdownRef.current) {
       clearInterval(countdownRef.current);
     }
-    typedCountsRef.current = new Map();
+    typedTextRef.current = new Map();
     preActiveIndicesRef.current = new Set();
     setAudioTime(0);
     dispatch({ type: 'RESTART', board: [], lyricPositions: [] });
