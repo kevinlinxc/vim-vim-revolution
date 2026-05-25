@@ -44,7 +44,11 @@ export function useGameEngine(
 
       const line = pos.lineNumber + 1;
       const completed = state.completedLyrics.has(i);
-      const isActive = i === state.currentLyricIndex && state.phase !== 'idle' && state.phase !== 'countdown';
+      const isActive = i === state.currentLyricIndex
+        && state.phase !== 'idle'
+        && state.phase !== 'countdown'
+        && audioTime >= lyrics[i].startTime
+        && audioTime < lyrics[i].endTime;
       const isWarning = preActive.has(i) && !isActive;
       const target = lyrics[i].text;
       const typed = (typedByIndex.get(i) || '').substring(0, target.length);
@@ -119,7 +123,7 @@ export function useGameEngine(
     }
 
     decorationIdsRef.current = ed.deltaDecorations(decorationIdsRef.current, decorations);
-  }, [state.currentLyricIndex, state.completedLyrics, state.phase, state.lyricPositions, editorRef]);
+  }, [state.currentLyricIndex, state.completedLyrics, state.phase, state.lyricPositions, editorRef, audioTime]);
 
   useEffect(() => {
     updateDecorations();
