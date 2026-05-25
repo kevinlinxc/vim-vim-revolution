@@ -77,8 +77,8 @@ def normalize_ing(text: str) -> str:
 def clean_text(text: str) -> str:
     text = text.lower()
 
-    # remove parentheticals
-    text = re.sub(r"\([^)]*\)", " ", text)
+    # strip parentheses but keep their content for matching
+    text = text.replace("(", " ").replace(")", " ")
 
     # normalize apostrophes
     text = text.replace("’", "'")
@@ -136,6 +136,14 @@ def load_lyrics(path: str):
         lyric_text = strip_lrc_tags(raw_line)
 
         if not lyric_text:
+            if input_timestamp is not None:
+                lines.append(
+                    {
+                        "original": "",
+                        "cleaned": "",
+                        "input_timestamp": input_timestamp,
+                    }
+                )
             continue
 
         cleaned = clean_text(lyric_text)
@@ -187,6 +195,17 @@ def flatten_words(segments):
 # Phrase-level matcher
 # ============================================================
 
+def find_word_index_for_time(aligned_words, timestamp):
+    best_idx = 0
+    best_diff = float("inf")
+    for i, w in enumerate(aligned_words):
+        diff = abs(w["start"] - timestamp)
+        if diff < best_diff:
+            best_diff = diff
+            best_idx = i
+    return best_idx
+
+
 def match_line_to_words(
     line_words,
     aligned_words,
@@ -204,7 +223,7 @@ def match_line_to_words(
     min_window = max(1, len(line_words) - 3)
     max_window = min(len(line_words) + 6, 24)
 
-    search_end = min(start_index + 400, len(aligned_words))
+    search_end = min(start_index + 150, len(aligned_words))
 
     for i in range(start_index, search_end):
 
@@ -219,8 +238,7 @@ def match_line_to_words(
 
             score = fuzz.ratio(target, candidate)
 
-            # small preference toward nearby matches
-            distance_penalty = (i - start_index) * 0.03
+            distance_penalty = (i - start_index) * 0.5
 
             adjusted_score = score - distance_penalty
 
@@ -325,13 +343,24 @@ def main():
 
     for i, lyric in enumerate(lyrics):
 
+        if not lyric["cleaned"]:
+            continue
+
         line_words = lyric["cleaned"].split()
 
-        start_time, end_time, current_word_index = (
+        if lyric["input_timestamp"] is not None:
+            anchor_idx = find_word_index_for_time(
+                aligned_words, lyric["input_timestamp"]
+            )
+            search_start = max(current_word_index, anchor_idx)
+        else:
+            search_start = current_word_index
+
+        start_time, end_time, match_end = (
             match_line_to_words(
                 line_words,
                 aligned_words,
-                current_word_index,
+                search_start,
             )
         )
 
@@ -364,6 +393,8 @@ def main():
                 print(f"Could not align: {lyric['original']}")
 
             continue
+
+        current_word_index = match_end
 
         # ====================================================
         # Optionally preserve original LRC starts

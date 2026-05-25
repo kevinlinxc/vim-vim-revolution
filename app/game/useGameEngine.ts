@@ -16,6 +16,8 @@ export function useGameEngine(
 ) {
   const { state, dispatch } = useGame();
   const decorationIdsRef = useRef<string[]>([]);
+  const flashDecoRef = useRef<string[]>([]);
+  const [flashActive, setFlashActive] = useState(false);
   const typedTextRef = useRef<Map<number, string>>(new Map());
   const preActiveIndicesRef = useRef<Set<number>>(new Set());
   const audioEndedRef = useRef(false);
@@ -128,6 +130,46 @@ export function useGameEngine(
   useEffect(() => {
     updateDecorations();
   }, [updateDecorations, editorReady, preActiveVersion]);
+
+  useEffect(() => {
+    if (!editorReady || state.phase === 'idle' || state.lyricPositions.length === 0) return;
+    if (flashActive) return;
+
+    const pos = state.lyricPositions[0];
+    if (!pos) return;
+
+    const ed = editorRef.current?.getEditor();
+    const mc = editorRef.current?.getMonaco();
+    if (!ed || !mc) return;
+
+    setFlashActive(true);
+
+    const line = pos.lineNumber + 1;
+
+    ed.revealLineInCenter(line);
+
+    flashDecoRef.current = ed.deltaDecorations(flashDecoRef.current, [
+      {
+        range: new mc.Range(line, 1, line, pos.endColumn),
+        options: { className: 'lyric-flash' },
+      },
+    ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editorReady, state.phase, state.lyricPositions, editorRef]);
+
+  useEffect(() => {
+    if (!flashActive) return;
+    const ed = editorRef.current?.getEditor();
+    if (!ed) return;
+
+    const timer = setTimeout(() => {
+      if (flashDecoRef.current.length > 0 && ed) {
+        flashDecoRef.current = ed.deltaDecorations(flashDecoRef.current, []);
+      }
+    }, 2500);
+
+    return () => clearTimeout(timer);
+  }, [flashActive, editorRef]);
 
   useEffect(() => {
     const ed = editorRef.current?.getEditor();
@@ -333,6 +375,8 @@ export function useGameEngine(
     preActiveIndicesRef.current = new Set();
     dispatch({ type: 'START_COUNTDOWN' });
 
+    editorRef.current?.getEditor()?.focus();
+
     let count = 3;
     dispatch({ type: 'SET_COUNTDOWN', value: count });
     countdownRef.current = setInterval(() => {
@@ -342,11 +386,12 @@ export function useGameEngine(
         dispatch({ type: 'SET_COUNTDOWN', value: 0 });
         dispatch({ type: 'START_PLAYING' });
         audioRef.current?.play();
+        editorRef.current?.getEditor()?.focus();
       } else {
         dispatch({ type: 'SET_COUNTDOWN', value: count });
       }
     }, 800);
-  }, [dispatch, audioRef]);
+  }, [dispatch, audioRef, editorRef]);
 
   const togglePause = useCallback(() => {
     const audio = audioRef.current;
@@ -378,6 +423,7 @@ export function useGameEngine(
     setTimeout(() => {
       let count = 3;
       dispatch({ type: 'SET_COUNTDOWN', value: count });
+      editorRef.current?.getEditor()?.focus();
       countdownRef.current = setInterval(() => {
         count--;
         if (count <= 0) {
@@ -385,12 +431,13 @@ export function useGameEngine(
           dispatch({ type: 'SET_COUNTDOWN', value: 0 });
           dispatch({ type: 'START_PLAYING' });
           audio?.play();
+          editorRef.current?.getEditor()?.focus();
         } else {
           dispatch({ type: 'SET_COUNTDOWN', value: count });
         }
       }, 800);
     }, 100);
-  }, [audioRef, dispatch]);
+  }, [audioRef, dispatch, editorRef]);
 
   const getCurrentLyricText = useCallback((): string => {
     if (state.currentLyricIndex >= totalLyrics) return '';

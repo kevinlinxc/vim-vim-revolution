@@ -37,6 +37,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
           renderLineHighlight: 'none',
         });
 
+        ed.setPosition({ lineNumber: 1, column: 1 });
         ed.focus();
 
         onReady?.();

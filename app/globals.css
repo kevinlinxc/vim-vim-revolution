@@ -104,3 +104,7 @@ body {
   text-decoration: inherit !important;
   font-size: inherit !important;
 }
+
+.lyric-flash {
+  background: rgba(250, 204, 21, 0.18) !important;
+}
