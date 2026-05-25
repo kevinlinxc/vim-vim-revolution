@@ -11,40 +11,39 @@ export default function ScoreBoard() {
     : 0;
 
   const comboClass = state.combo >= 5
-    ? 'text-yellow-400 scale-110'
+    ? 'text-yellow-400'
     : state.combo >= 3
       ? 'text-green-400'
-      : '';
+      : 'text-zinc-300';
 
   return (
-    <div className="flex flex-col gap-4 p-4 bg-zinc-900 rounded-lg border border-zinc-700 min-w-[180px]">
-      <div className="text-center">
-        <div className="text-xs text-zinc-500 uppercase tracking-wider">Score</div>
-        <div className="text-2xl font-bold text-white tabular-nums">
+    <div className="flex items-center gap-5 px-3 py-2 text-xs">
+      <div className="flex items-center gap-1.5">
+        <span className="text-zinc-500 uppercase tracking-wider text-[10px]">Score</span>
+        <span className="text-sm font-bold text-white tabular-nums">
           {state.score.toLocaleString()}
-        </div>
+        </span>
       </div>
 
-      <div className="text-center">
-        <div className="text-xs text-zinc-500 uppercase tracking-wider">Combo</div>
-        <div className={`text-xl font-bold tabular-nums transition-all duration-150 ${comboClass}`}>
+      <div className="flex items-center gap-1.5">
+        <span className="text-zinc-500 uppercase tracking-wider text-[10px]">Combo</span>
+        <span className={`text-sm font-bold tabular-nums transition-colors duration-150 ${comboClass}`}>
           {state.combo}x
-        </div>
+        </span>
       </div>
 
-      <div className="text-center">
-        <div className="text-xs text-zinc-500 uppercase tracking-wider">Max Combo</div>
-        <div className="text-lg font-semibold text-zinc-300 tabular-nums">
+      <div className="flex items-center gap-1.5">
+        <span className="text-zinc-500 uppercase tracking-wider text-[10px]">Max</span>
+        <span className="text-sm font-semibold text-zinc-400 tabular-nums">
           {state.maxCombo}x
-        </div>
+        </span>
       </div>
 
-      <div className="text-center">
-        <div className="text-xs text-zinc-500 uppercase tracking-wider">Progress</div>
-        <div className="text-lg font-semibold text-zinc-300 tabular-nums">
-          {state.lyricsCompleted} / {totalLyrics}
-        </div>
-        <div className="mt-1 h-1.5 bg-zinc-700 rounded-full overflow-hidden">
+      <div className="flex items-center gap-2">
+        <span className="text-zinc-500 uppercase tracking-wider text-[10px]">
+          {state.lyricsCompleted}/{totalLyrics}
+        </span>
+        <div className="w-16 h-1.5 bg-zinc-700 rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}

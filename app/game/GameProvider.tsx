@@ -1,9 +1,9 @@
 'use client';
 
-import React, { createContext, useContext, useReducer } from 'react';
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import type { GameState, GameAction, LyricPosition } from './types';
 import { generateBoard } from './boardGenerator';
-import { lyrics, totalLyrics } from './songData';
+import { lyrics, totalLyrics, loadSongData } from './songData';
 
 function makeInitialState(
   board?: string[],
@@ -99,6 +99,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     case 'BREAK_COMBO':
       return { ...state, combo: 0 };
 
+    case 'INIT_DATA':
+      return makeInitialState();
+
     default:
       return state;
   }
@@ -113,6 +116,12 @@ const GameContext = createContext<GameContextValue | null>(null);
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(gameReducer, null, () => makeInitialState());
+
+  useEffect(() => {
+    loadSongData().then(() => {
+      dispatch({ type: 'INIT_DATA' });
+    });
+  }, []);
 
   return (
     <GameContext.Provider value={{ state, dispatch }}>

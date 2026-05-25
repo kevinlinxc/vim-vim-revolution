@@ -35,7 +35,8 @@ export type GameAction =
   | { type: 'RESTART'; board: string[]; lyricPositions: LyricPosition[] }
   | { type: 'ADVANCE_LYRIC' }
   | { type: 'COMPLETE_LYRIC'; lyricIndex: number; timeRemaining: number }
-  | { type: 'BREAK_COMBO' };
+  | { type: 'BREAK_COMBO' }
+  | { type: 'INIT_DATA' };
 
 export type FeedbackRating = 'perfect' | 'good' | 'bad' | 'miss';
 

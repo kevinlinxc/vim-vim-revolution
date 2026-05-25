@@ -59,38 +59,53 @@ export async function POST(request: NextRequest) {
     const existingUser = existingUsers[0]
     const userId = existingUser.user_id
 
-    const { data: bestScores, error: scoreLookupError } = await supabaseAdmin
+    const { data: existingEntries, error: scoreLookupError } = await supabaseAdmin
       .from('leaderboard')
-      .select('score')
+      .select('id, score')
       .eq('user_id', userId)
       .eq('song_id', SONG_ID)
       .order('score', { ascending: false })
-      .limit(1)
 
     if (scoreLookupError) {
       return NextResponse.json({ error: scoreLookupError.message }, { status: 500 })
     }
 
-    const bestScore = bestScores && bestScores.length > 0 ? bestScores[0].score : 0
+    const hasEntries = existingEntries && existingEntries.length > 0
 
-    if (score <= bestScore) {
-      return NextResponse.json(
-        { error: `Score too low. Beat ${bestScore.toLocaleString()} to take this name.` },
-        { status: 409 },
-      )
-    }
+    if (hasEntries) {
+      const highest = existingEntries.reduce((max, e) => (e.score > max.score ? e : max), existingEntries[0])
 
-    const { error: insertError } = await supabaseAdmin
-      .from('leaderboard')
-      .insert({
-        user_id: userId,
-        song_id: SONG_ID,
-        score,
-        created_at: new Date().toISOString(),
-      })
+      if (score <= highest.score) {
+        return NextResponse.json(
+          { error: `Score too low. Beat ${highest.score.toLocaleString()} to improve.` },
+          { status: 409 },
+        )
+      }
 
-    if (insertError) {
-      return NextResponse.json({ error: insertError.message }, { status: 500 })
+      const { error: updateError } = await supabaseAdmin
+        .from('leaderboard')
+        .update({
+          score,
+          created_at: new Date().toISOString(),
+        })
+        .eq('id', highest.id)
+
+      if (updateError) {
+        return NextResponse.json({ error: updateError.message }, { status: 500 })
+      }
+    } else {
+      const { error: insertError } = await supabaseAdmin
+        .from('leaderboard')
+        .insert({
+          user_id: userId,
+          song_id: SONG_ID,
+          score,
+          created_at: new Date().toISOString(),
+        })
+
+      if (insertError) {
+        return NextResponse.json({ error: insertError.message }, { status: 500 })
+      }
     }
   } else {
     const { data: newUser, error: createUserError } = await supabaseAdmin

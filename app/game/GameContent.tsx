@@ -5,7 +5,6 @@ import { useGame } from './GameProvider';
 import MonacoEditor, { type MonacoEditorHandle } from './MonacoEditor';
 import { useGameEngine } from './useGameEngine';
 import ScoreBoard from './ScoreBoard';
-import LyricDisplay from './LyricDisplay';
 import FeedbackOverlay from './FeedbackOverlay';
 import { useNickname } from './NicknameProvider';
 import Leaderboard from './Leaderboard';
@@ -63,14 +62,13 @@ export default function GameContent() {
   const [lbError, setLbError] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [showLb, setShowLb] = useState(false);
+  const [lbData, setLbData] = useState<LeaderboardEntry[]>([]);
 
   const {
     startGame,
     togglePause,
     restartGame,
-    getCurrentLyricText,
-    getNextLyricText,
-    getCurrentLineNumber,
     audioTime,
     audioDuration,
     feedbacks,
@@ -93,6 +91,18 @@ export default function GameContent() {
     restartGame();
   }, [restartGame]);
 
+  const openLeaderboard = useCallback(() => {
+    setShowLb(true);
+    fetch('/api/leaderboard')
+      .then(r => r.json())
+      .then(data => setLbData(data))
+      .catch(() => {});
+  }, []);
+
+  const closeLeaderboard = useCallback(() => {
+    setShowLb(false);
+  }, []);
+
   useEffect(() => {
     if (state.phase !== 'finished') return
 
@@ -107,10 +117,6 @@ export default function GameContent() {
 
     return () => { cancelled = true }
   }, [state.phase])
-
-  const currentLyric = getCurrentLyricText()
-  const nextLyric = getNextLyricText()
-  const currentLine = getCurrentLineNumber()
 
   const handleSubmitScore = useCallback(async (handle: string) => {
     setSubmitting(true);
@@ -247,15 +253,33 @@ export default function GameContent() {
           </div>
         )}
 
-        <div className="flex items-start gap-4 p-3 bg-zinc-900 border-b border-zinc-800">
-          <div className="flex-1">
-            <LyricDisplay
-              currentLyric={currentLyric}
-              nextLyric={nextLyric}
-              currentLine={currentLine}
-            />
+        {showLb && (
+          <div className="absolute inset-0 z-40 flex items-center justify-center bg-zinc-950/80 backdrop-blur-sm">
+            <div className="flex flex-col gap-4 p-8 bg-zinc-900 rounded-2xl border border-zinc-700 shadow-2xl min-w-[320px] max-h-[80vh] overflow-y-auto">
+              <div className="flex items-center justify-between">
+                <div className="text-lg font-bold text-white">Leaderboard</div>
+                <button
+                  onClick={closeLeaderboard}
+                  className="px-3 py-1 rounded text-xs font-medium bg-zinc-700 hover:bg-zinc-600 text-zinc-300 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+              <Leaderboard entries={lbData} />
+            </div>
           </div>
-          <ScoreBoard />
+        )}
+
+        <div className="flex items-center bg-zinc-900 border-b border-zinc-800">
+          <div className="flex-1">
+            <ScoreBoard />
+          </div>
+          <button
+            onClick={openLeaderboard}
+            className="px-3 py-1.5 mr-3 rounded text-xs font-medium bg-zinc-700 hover:bg-zinc-600 text-zinc-300 transition-colors"
+          >
+            Leaderboard
+          </button>
         </div>
 
         <div className="flex items-center gap-3 px-3 py-2 bg-zinc-900 border-b border-zinc-800">
