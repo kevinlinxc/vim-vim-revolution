@@ -1,7 +1,6 @@
 'use client';
 
 import { useGame } from './GameProvider';
-import { totalLyrics } from './songData';
 
 interface LyricDisplayProps {
   currentLyric: string;
@@ -16,7 +15,7 @@ export default function LyricDisplay({
 }: LyricDisplayProps) {
   const { state } = useGame();
 
-  if (state.phase === 'idle') {
+  if (state.phase === 'idle' || state.phase === 'finished') {
     return null;
   }
 
@@ -34,20 +33,6 @@ export default function LyricDisplay({
             then: {nextLyric}
           </div>
         )}
-      </div>
-    );
-  }
-
-  if (state.phase === 'finished') {
-    return (
-      <div className="flex flex-col items-center gap-2 p-4 bg-zinc-900 rounded-lg border border-zinc-700">
-        <div className="text-2xl font-bold text-yellow-400">Game Over!</div>
-        <div className="text-lg text-zinc-300">
-          Final Score: {state.score.toLocaleString()}
-        </div>
-        <div className="text-sm text-zinc-500">
-          Max Combo: {state.maxCombo}x | Completed: {state.lyricsCompleted}/{totalLyrics}
-        </div>
       </div>
     );
   }

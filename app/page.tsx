@@ -122,6 +122,36 @@ function GameContent() {
           </div>
         )}
 
+        {state.phase === 'finished' && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-zinc-950/80 backdrop-blur-sm">
+            <div className="flex flex-col items-center gap-6 p-10 bg-zinc-900 rounded-2xl border border-zinc-700 shadow-2xl">
+              <div className="text-3xl font-bold text-yellow-400">Game Over!</div>
+              <div className="text-6xl font-bold text-white tabular-nums">
+                {state.score.toLocaleString()}
+              </div>
+              <div className="text-sm text-zinc-500">
+                Max Combo: {state.maxCombo}x &middot; Completed: {state.lyricsCompleted}/{state.lyricPositions.length}
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleRestart}
+                  className="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-lg transition-colors"
+                >
+                  Play Again
+                </button>
+                <a
+                  href={`https://x.com/intent/tweet?text=${encodeURIComponent(`Just got ${state.score} score on vimvimrevolution.com!`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-6 py-2.5 bg-zinc-700 hover:bg-zinc-600 text-white font-semibold rounded-lg transition-colors inline-flex items-center gap-2"
+                >
+                  Share on 𝕏
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-start gap-4 p-3 bg-zinc-900 border-b border-zinc-800">
           <div className="flex-1">
             <LyricDisplay
