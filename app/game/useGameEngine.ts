@@ -5,6 +5,7 @@ import { useGame } from './GameProvider';
 import { lyrics, totalLyrics } from './songData';
 import type { MonacoEditorHandle } from './MonacoEditor';
 import type { editor } from 'monaco-editor';
+import type { FeedbackEvent, FeedbackRating } from './types';
 
 const PRE_ACTIVE_SECONDS = 3;
 
@@ -22,6 +23,8 @@ export function useGameEngine(
   const [audioTime, setAudioTime] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
   const [preActiveVersion, setPreActiveVersion] = useState(0);
+  const [feedbacks, setFeedbacks] = useState<FeedbackEvent[]>([]);
+  const feedbackIdRef = useRef(0);
 
   const updateDecorations = useCallback(() => {
     const ed = editorRef.current?.getEditor();
@@ -180,6 +183,19 @@ export function useGameEngine(
             ? Math.max(0, lyrics[i].endTime - audio.currentTime)
             : 0;
 
+          const windowDuration = lyrics[i].endTime - lyrics[i].startTime;
+          const ratio = windowDuration > 0 ? timeRemaining / windowDuration : 0;
+          let rating: FeedbackRating;
+          if (ratio >= 0.5) rating = 'perfect';
+          else if (ratio >= 0.2) rating = 'good';
+          else rating = 'bad';
+
+          const fid = feedbackIdRef.current++;
+          setFeedbacks(prev => [...prev, {
+            id: fid, rating, points: Math.round(100 + timeRemaining * 10),
+            lineNumber: pos.lineNumber, endColumn: pos.endColumn, createdAt: Date.now(),
+          }]);
+
           dispatch({
             type: 'COMPLETE_LYRIC',
             lyricIndex: i,
@@ -213,7 +229,44 @@ export function useGameEngine(
       const lyric = lyrics[currentIdx];
       if (lyric && t >= lyric.endTime) {
         if (!state.completedLyrics.has(currentIdx)) {
-          dispatch({ type: 'BREAK_COMBO' });
+          const typedByIndex = typedTextRef.current;
+          const typed = typedByIndex.get(currentIdx) || '';
+          const target = lyric.text;
+
+          let matchLen = 0;
+          while (matchLen < typed.length && matchLen < target.length && typed[matchLen] === target[matchLen]) {
+            matchLen++;
+          }
+          const percentage = target.length > 0 ? matchLen / target.length : 0;
+
+          let rating: FeedbackRating;
+          let points: number;
+          if (percentage >= 0.9) {
+            rating = 'perfect';
+            points = Math.round(100 * percentage);
+            dispatch({ type: 'COMPLETE_LYRIC', lyricIndex: currentIdx, timeRemaining: 0 });
+          } else if (percentage >= 0.7) {
+            rating = 'good';
+            points = Math.round(100 * percentage);
+            dispatch({ type: 'COMPLETE_LYRIC', lyricIndex: currentIdx, timeRemaining: 0 });
+          } else if (percentage >= 0.4) {
+            rating = 'bad';
+            points = Math.round(50 * percentage);
+            dispatch({ type: 'BREAK_COMBO' });
+          } else {
+            rating = 'miss';
+            points = 0;
+            dispatch({ type: 'BREAK_COMBO' });
+          }
+
+          const missPos = state.lyricPositions[currentIdx];
+          if (missPos) {
+            const fid = feedbackIdRef.current++;
+            setFeedbacks(prev => [...prev, {
+              id: fid, rating, points,
+              lineNumber: missPos.lineNumber, endColumn: missPos.endColumn, createdAt: Date.now(),
+            }]);
+          }
         }
         const next = currentIdx + 1;
         if (next >= totalLyrics) {
@@ -243,7 +296,7 @@ export function useGameEngine(
     }, 200);
 
     return () => clearInterval(interval);
-  }, [state.phase, state.currentLyricIndex, state.completedLyrics, audioRef, dispatch]);
+  }, [state.phase, state.currentLyricIndex, state.completedLyrics, state.lyricPositions, audioRef, dispatch]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -351,6 +404,10 @@ export function useGameEngine(
     return pos?.lineNumber ?? null;
   }, [state.currentLyricIndex, state.lyricPositions]);
 
+  const dismissFeedback = useCallback((id: number) => {
+    setFeedbacks(prev => prev.filter(f => f.id !== id));
+  }, []);
+
   return {
     startGame,
     togglePause,
@@ -360,5 +417,7 @@ export function useGameEngine(
     getCurrentLineNumber,
     audioTime,
     audioDuration,
+    feedbacks,
+    dismissFeedback,
   };
 }

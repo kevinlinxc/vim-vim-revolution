@@ -6,6 +6,7 @@ import MonacoEditor, { type MonacoEditorHandle } from './game/MonacoEditor';
 import { useGameEngine } from './game/useGameEngine';
 import ScoreBoard from './game/ScoreBoard';
 import LyricDisplay from './game/LyricDisplay';
+import FeedbackOverlay from './game/FeedbackOverlay';
 
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -56,6 +57,8 @@ function GameContent() {
     getCurrentLineNumber,
     audioTime,
     audioDuration,
+    feedbacks,
+    dismissFeedback,
   } = useGameEngine(editorRef, audioRef, editorReady);
 
   const boardText = useMemo(() => state.board.join('\n'), [state.board]);
@@ -94,8 +97,7 @@ function GameContent() {
               Vim Vim Revolution
             </h1>
             <p className="text-zinc-400 text-lg max-w-md text-center">
-              Navigate the editor with vim motions and type the lyrics
-              to the beat of the song.
+              Please no lawsuit Konami 🙏
             </p>
             <div className="text-sm text-zinc-600">
               &quot;Don&apos;t Stop Me Now&quot; — Queen
@@ -113,11 +115,10 @@ function GameContent() {
         )}
 
         {state.phase === 'countdown' && (
-          <div className="flex items-center justify-center py-2 bg-purple-900/30 border-b border-purple-800/50">
-            <span className="text-2xl font-bold text-purple-400 animate-pulse tabular-nums">
+          <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none">
+            <div className="text-[12rem] font-bold text-purple-400/60 animate-pulse tabular-nums leading-none">
               {state.countdownValue}
-            </span>
-            <span className="ml-3 text-sm text-purple-400/60">Get ready — scan the board</span>
+            </div>
           </div>
         )}
 
@@ -162,13 +163,18 @@ function GameContent() {
           </div>
         </div>
 
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 relative">
           <MonacoEditor
             key={gameKey}
             ref={editorRef}
             value={boardText}
             onEditorChange={handleEditorChange}
             onReady={handleEditorReady}
+          />
+          <FeedbackOverlay
+            feedbacks={feedbacks}
+            editorRef={editorRef}
+            onDismiss={dismissFeedback}
           />
         </div>
       </div>

@@ -61,7 +61,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
           onChange={onEditorChange}
           onMount={handleMount}
           options={{
-            fontSize: 14,
+            fontSize: 15,
             fontFamily: 'var(--font-geist-mono), monospace',
             lineNumbers: 'relative',
             minimap: { enabled: false },

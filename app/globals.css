@@ -29,30 +29,36 @@ body {
   color: #ef4444 !important;
   background: rgba(239, 68, 68, 0.08);
   font-style: italic;
+  font-size: 18px !important;
 }
 .lyric-placeholder span {
   color: inherit !important;
   font-style: inherit !important;
+  font-size: inherit !important;
 }
 
 .lyric-placeholder-warning {
   color: #facc15 !important;
   background: rgba(250, 204, 21, 0.1);
   font-style: italic;
+  font-size: 18px !important;
 }
 .lyric-placeholder-warning span {
   color: inherit !important;
   font-style: inherit !important;
+  font-size: inherit !important;
 }
 
 .lyric-placeholder-active {
   color: #f87171 !important;
   background: rgba(239, 68, 68, 0.18) !important;
   font-style: italic;
+  font-size: 18px !important;
 }
 .lyric-placeholder-active span {
   color: inherit !important;
   font-style: inherit !important;
+  font-size: inherit !important;
 }
 
 .lyric-slot {
@@ -80,17 +86,21 @@ body {
 .lyric-green {
   color: #22c55e !important;
   background: rgba(34, 197, 94, 0.08);
+  font-size: 18px !important;
 }
 .lyric-green span {
   color: inherit !important;
+  font-size: inherit !important;
 }
 
 .lyric-wrong {
   color: #ef4444 !important;
   background: rgba(239, 68, 68, 0.15) !important;
   text-decoration: underline wavy #ef4444;
+  font-size: 18px !important;
 }
 .lyric-wrong span {
   color: inherit !important;
   text-decoration: inherit !important;
+  font-size: inherit !important;
 }

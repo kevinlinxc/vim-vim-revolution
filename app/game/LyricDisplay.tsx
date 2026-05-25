@@ -26,11 +26,11 @@ export default function LyricDisplay({
         <div className="text-xs text-zinc-500 uppercase tracking-wider">
           Up first
         </div>
-        <div className="text-xl font-bold text-white leading-tight">
+        <div className="text-3xl font-bold text-white leading-tight">
           {currentLyric || '...'}
         </div>
         {nextLyric && (
-          <div className="text-sm text-zinc-500 leading-tight">
+          <div className="text-base text-zinc-500 leading-tight">
             then: {nextLyric}
           </div>
         )}
@@ -57,7 +57,7 @@ export default function LyricDisplay({
       <div className="text-xs text-zinc-500 uppercase tracking-wider">
         Now
       </div>
-      <div className="text-xl font-bold text-white leading-tight">
+      <div className="text-3xl font-bold text-white leading-tight">
         {currentLyric || '...'}
       </div>
       {currentLine !== null && (
@@ -70,7 +70,7 @@ export default function LyricDisplay({
           <div className="text-xs text-zinc-600 uppercase tracking-wider">
             Next
           </div>
-          <div className="text-sm text-zinc-500 leading-tight">
+          <div className="text-base text-zinc-500 leading-tight">
             {nextLyric}
           </div>
         </div>

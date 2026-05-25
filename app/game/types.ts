@@ -36,3 +36,14 @@ export type GameAction =
   | { type: 'ADVANCE_LYRIC' }
   | { type: 'COMPLETE_LYRIC'; lyricIndex: number; timeRemaining: number }
   | { type: 'BREAK_COMBO' };
+
+export type FeedbackRating = 'perfect' | 'good' | 'bad' | 'miss';
+
+export interface FeedbackEvent {
+  id: number;
+  rating: FeedbackRating;
+  points: number;
+  lineNumber: number;
+  endColumn: number;
+  createdAt: number;
+}
