@@ -16,6 +16,17 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Vim Vim Revolution",
   description: "A rhythm game where you type song lyrics with vim motions",
+  openGraph: {
+    title: "Vim Vim Revolution",
+    description: "A rhythm game where you type song lyrics with vim motions",
+    images: [{ url: "/vim-vim-revolution-logo.png" }],
+  },
+  twitter: {
+    card: "summary",
+    title: "Vim Vim Revolution",
+    description: "A rhythm game where you type song lyrics with vim motions",
+    images: ["/vim-vim-revolution-logo.png"],
+  },
 };
 
 export default function RootLayout({
