@@ -17,6 +17,7 @@ const RATING_STYLE: Record<string, { label: string; color: string; bg: string }>
   bad: { label: 'bad', color: 'text-orange-400', bg: 'bg-orange-500/15' },
   terrible: { label: 'terrible', color: 'text-red-300', bg: 'bg-red-500/10' },
   miss: { label: 'miss!', color: 'text-red-400', bg: 'bg-red-500/15' },
+  early: { label: 'too early!', color: 'text-gray-400', bg: 'bg-gray-500/15' },
 };
 
 const BADGE_DURATION = 2500;

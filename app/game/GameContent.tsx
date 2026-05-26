@@ -187,7 +187,7 @@ export default function GameContent() {
               Vim Vim Revolution
             </h1>
             <p className="text-[#B1B1B1] text-base max-w-md text-center">
-              Please don't sue me Konami
+              Please don&apos;t sue me Konami
             </p>
             <button
               onClick={startGame}
@@ -219,12 +219,9 @@ export default function GameContent() {
               >
                 ✕
               </button>
-              <div className="text-3xl font-bold text-yellow-400">Game Over!</div>
+              <div className="text-3xl font-bold text-yellow-400">Final Score</div>
               <div className="text-6xl font-bold text-white tabular-nums">
                 {state.score.toLocaleString()}
-              </div>
-              <div className="text-sm text-zinc-500">
-                Max Combo: {state.maxCombo}x &middot; Completed: {state.lyricsCompleted}/{state.lyricPositions.length}
               </div>
               <div className="flex gap-3">
                 <button
@@ -276,15 +273,6 @@ export default function GameContent() {
           </div>
         )}
 
-        {state.phase === 'finished' && hideGameOver && (
-          <button
-            onClick={() => setHideGameOver(false)}
-            className="absolute top-4 right-4 z-40 px-4 py-2 rounded-lg bg-[#00992F] hover:bg-[#007a25] text-white text-sm font-semibold"
-          >
-            Show Results
-          </button>
-        )}
-
         {showLb && (
           <div className="absolute inset-0 z-40 flex items-center justify-center bg-zinc-950/80 backdrop-blur-sm">
             <div className="flex flex-col gap-4 p-8 bg-zinc-900 rounded-2xl border border-zinc-700 shadow-2xl min-w-[320px] max-h-[80vh] overflow-y-auto">
@@ -303,13 +291,21 @@ export default function GameContent() {
         )}
 
         <div className="flex items-center gap-3 px-4 py-2 bg-zinc-900 border-b border-zinc-800">
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 flex items-center gap-3">
             <LyricDisplay currentLyric={currentLyric} />
+            {state.phase === 'finished' && hideGameOver && (
+              <button
+                onClick={() => setHideGameOver(false)}
+                className="px-4 py-1.5 rounded text-sm font-semibold bg-[#00992F] hover:bg-[#007a25] text-white"
+              >
+                Show Results
+              </button>
+            )}
           </div>
           <ScoreBoard />
           <button
             onClick={openLeaderboard}
-            className="px-3 py-1.5 rounded text-xs font-medium bg-zinc-700 hover:bg-zinc-600 text-zinc-300 shrink-0"
+            className={`px-3 py-1.5 rounded text-xs font-medium bg-zinc-700 hover:bg-zinc-600 text-zinc-300 shrink-0 ${state.phase === 'finished' ? 'hidden' : ''}`}
           >
             LB
           </button>

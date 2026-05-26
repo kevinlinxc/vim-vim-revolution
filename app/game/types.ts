@@ -34,11 +34,11 @@ export type GameAction =
   | { type: 'FINISH' }
   | { type: 'RESTART'; board: string[]; lyricPositions: LyricPosition[] }
   | { type: 'ADVANCE_LYRIC' }
-  | { type: 'COMPLETE_LYRIC'; lyricIndex: number; timeRemaining: number }
+  | { type: 'COMPLETE_LYRIC'; lyricIndex: number; timeRemaining: number; early?: boolean }
   | { type: 'BREAK_COMBO' }
   | { type: 'INIT_DATA' };
 
-export type FeedbackRating = 'perfect' | 'good' | 'okay' | 'bad' | 'terrible' | 'miss';
+export type FeedbackRating = 'perfect' | 'good' | 'okay' | 'bad' | 'terrible' | 'miss' | 'early';
 
 export interface FeedbackEvent {
   id: number;

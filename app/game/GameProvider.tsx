@@ -74,7 +74,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     }
 
     case 'COMPLETE_LYRIC': {
-      const { lyricIndex, timeRemaining } = action;
+      const { lyricIndex, timeRemaining, early } = action;
       if (state.completedLyrics.has(lyricIndex)) return state;
 
       const newCompleted = new Set(state.completedLyrics);
@@ -83,8 +83,11 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       const basePoints = 100;
       const timeBonus = Math.floor(timeRemaining * 10);
       const comboMultiplier = Math.min(state.combo + 1, 10);
-      const points = (basePoints + timeBonus) * comboMultiplier;
-      const newCombo = state.combo + 1;
+      let points = (basePoints + timeBonus) * comboMultiplier;
+      if (early) {
+        points = Math.round(points * 0.25);
+      }
+      const newCombo = early ? state.combo : state.combo + 1;
 
       return {
         ...state,

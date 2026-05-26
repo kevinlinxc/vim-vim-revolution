@@ -229,19 +229,24 @@ export function useGameEngine(
           const timeRemaining = audio
             ? Math.max(0, lyrics[i].endTime - audio.currentTime)
             : 0;
+          const isEarly = audio ? lyrics[i].startTime - audio.currentTime >= 3 : false;
 
           const windowDuration = lyrics[i].endTime - lyrics[i].startTime;
           const ratio = windowDuration > 0 ? timeRemaining / windowDuration : 0;
           let rating: FeedbackRating;
-          if (ratio >= 0.5) rating = 'perfect';
-          else if (ratio >= 0.3) rating = 'good';
+          if (isEarly) {
+            rating = 'early';
+          } else if (ratio >= 0.5) {
+            rating = 'perfect';
+          } else if (ratio >= 0.3) rating = 'good';
           else if (ratio >= 0.1) rating = 'okay';
           else if (matchLen >= target.length) rating = 'okay';
           else rating = 'bad';
 
           const fid = feedbackIdRef.current++;
+          const pts = Math.round(100 + timeRemaining * 10);
           setFeedbacks(prev => [...prev, {
-            id: fid, rating, points: Math.round(100 + timeRemaining * 10),
+            id: fid, rating, points: isEarly ? Math.round(pts * 0.25) : pts,
             lineNumber: pos.lineNumber, endColumn: pos.endColumn, createdAt: Date.now(),
           }]);
 
@@ -249,6 +254,7 @@ export function useGameEngine(
             type: 'COMPLETE_LYRIC',
             lyricIndex: i,
             timeRemaining,
+            early: isEarly,
           });
 
           if (i + 1 < totalLyrics) {
@@ -290,7 +296,11 @@ export function useGameEngine(
 
           let rating: FeedbackRating;
           let points: number;
-          if (percentage >= 0.9) {
+          if (matchLen >= target.length) {
+            rating = 'perfect';
+            points = Math.round(100);
+            dispatch({ type: 'COMPLETE_LYRIC', lyricIndex: currentIdx, timeRemaining: 0 });
+          } else if (percentage >= 0.9) {
             rating = 'perfect';
             points = Math.round(100 * percentage);
             dispatch({ type: 'COMPLETE_LYRIC', lyricIndex: currentIdx, timeRemaining: 0 });
@@ -307,6 +317,10 @@ export function useGameEngine(
             points = Math.round(50 * percentage);
             dispatch({ type: 'BREAK_COMBO' });
           } else if (percentage >= 0.2) {
+            rating = 'terrible';
+            points = Math.round(25 * percentage);
+            dispatch({ type: 'BREAK_COMBO' });
+          } else if (matchLen > 0) {
             rating = 'terrible';
             points = Math.round(25 * percentage);
             dispatch({ type: 'BREAK_COMBO' });
