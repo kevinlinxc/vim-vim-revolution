@@ -1,6 +1,6 @@
 import type { LyricLine } from './types';
 
-export const LRC_OFFSET = 0.35;
+export const LRC_OFFSET = 0;
 
 function stripPunctuation(s: string): string {
   return s.replace(/[(),.!?;:"\-—…\[\]{}]/g, '').trim().replace(/\s+/g, ' ');

@@ -19,6 +19,7 @@ export function useGameEngine(
   const flashDecoRef = useRef<string[]>([]);
   const [flashActive, setFlashActive] = useState(false);
   const typedTextRef = useRef<Map<number, string>>(new Map());
+  const recentlyCompletedRef = useRef<Set<number>>(new Set());
   const preActiveIndicesRef = useRef<Set<number>>(new Set());
   const audioEndedRef = useRef(false);
   const finishTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -257,6 +258,8 @@ export function useGameEngine(
             early: isEarly,
           });
 
+          recentlyCompletedRef.current.add(i);
+
           if (i + 1 < totalLyrics) {
             dispatch({ type: 'ADVANCE_LYRIC' });
           }
@@ -283,7 +286,10 @@ export function useGameEngine(
 
       const lyric = lyrics[currentIdx];
       if (lyric && t >= lyric.endTime) {
-        if (!state.completedLyrics.has(currentIdx)) {
+        const justCompleted = recentlyCompletedRef.current.has(currentIdx);
+        if (justCompleted) {
+          recentlyCompletedRef.current.delete(currentIdx);
+        } else if (!state.completedLyrics.has(currentIdx)) {
           const typedByIndex = typedTextRef.current;
           const typed = typedByIndex.get(currentIdx) || '';
           const target = lyric.text;
@@ -401,6 +407,7 @@ export function useGameEngine(
   const startGame = useCallback(() => {
     if (finishTimeoutRef.current) clearTimeout(finishTimeoutRef.current);
     typedTextRef.current = new Map();
+    recentlyCompletedRef.current = new Set();
     preActiveIndicesRef.current = new Set();
     dispatch({ type: 'START_COUNTDOWN' });
 
@@ -446,6 +453,7 @@ export function useGameEngine(
       clearInterval(countdownRef.current);
     }
     typedTextRef.current = new Map();
+    recentlyCompletedRef.current = new Set();
     preActiveIndicesRef.current = new Set();
     setAudioTime(0);
     dispatch({ type: 'RESTART', board: [], lyricPositions: [] });
