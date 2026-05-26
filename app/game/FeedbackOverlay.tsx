@@ -52,7 +52,7 @@ function FeedbackBadge({
   return (
     <div
       className={`absolute z-10 px-4 py-2.5 rounded-xl font-mono text-lg font-bold
-        transition-all duration-300 pointer-events-none whitespace-nowrap ${r.bg}
+        pointer-events-none whitespace-nowrap ${r.bg}
         ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}
       style={{ top: `${top}px`, left: `${left}px` }}
     >
