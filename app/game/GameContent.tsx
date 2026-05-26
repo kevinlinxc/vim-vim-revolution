@@ -198,6 +198,17 @@ export default function GameContent() {
             <div className="text-xs text-zinc-500 mt-2">
               Vim keys: h j k l w b 0 $ / ? gg G
             </div>
+              <span className="text-xs text-zinc-600">
+                Created by{' '}
+                <a
+                  href="https://x.com/linguinelabs"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-[#B1B1B1]"
+                >
+                  @linguinelabs
+                </a>
+              </span>
           </div>
         )}
 
@@ -269,6 +280,17 @@ export default function GameContent() {
                   )}
                 </div>
               </div>
+            <span className="text-xs text-zinc-600 mt-4">
+              Created by{' '}
+              <a
+                href="https://x.com/linguinelabs"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-[#B1B1B1]"
+              >
+                @linguinelabs
+              </a>
+            </span>
             </div>
           </div>
         )}
