@@ -187,7 +187,7 @@ export default function GameContent() {
               Vim Vim Revolution
             </h1>
             <p className="text-[#B1B1B1] text-base max-w-md text-center">
-              Please don&apos;t sue me Konami
+              Type the lyrics in time with the song, in a Vim editor!
             </p>
             <button
               onClick={startGame}
@@ -195,20 +195,19 @@ export default function GameContent() {
             >
               Start
             </button>
-            <div className="text-xs text-zinc-500 mt-2">
-              Vim keys: h j k l w b 0 $ / ? gg G
-            </div>
-              <span className="text-xs text-zinc-600">
-                Created by{' '}
-                <a
-                  href="https://x.com/linguinelabs"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-[#B1B1B1]"
-                >
-                  @linguinelabs
-                </a>
-              </span>
+            <HintsDropdown />
+
+            <span className="text-xs text-zinc-600 mt-4">
+              Created by{' '}
+              <a
+                href="https://x.com/linguinelabs"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-[#B1B1B1]"
+              >
+                @linguinelabs
+              </a>
+            </span>
           </div>
         )}
 
@@ -280,17 +279,17 @@ export default function GameContent() {
                   )}
                 </div>
               </div>
-            <span className="text-xs text-zinc-600 mt-4">
-              Created by{' '}
-              <a
-                href="https://x.com/linguinelabs"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-[#B1B1B1]"
-              >
-                @linguinelabs
-              </a>
-            </span>
+              <span className="text-xs text-zinc-600 mt-4">
+                Created by{' '}
+                <a
+                  href="https://x.com/linguinelabs"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-[#B1B1B1]"
+                >
+                  @linguinelabs
+                </a>
+              </span>
             </div>
           </div>
         )}
@@ -378,6 +377,87 @@ export default function GameContent() {
           />
         </div>
       </div>
+    </div>
+  );
+}
+
+function HintsDropdown() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="w-full max-w-sm mt-2">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-sm text-zinc-300 font-medium flex items-center justify-between"
+      >
+        How to Play / Vim Controls
+        <span className={`text-xs ml-2 ${open ? 'rotate-90' : ''}`}>▶</span>
+      </button>
+      {open && (
+        <div className="mt-2 px-4 py-3 bg-zinc-800/60 rounded-lg text-xs text-zinc-400 space-y-2 text-left">
+          <div>
+            <span className="text-[#B1B1B1] font-semibold">Movement:</span>{' '}
+            <kbd className="px-1 py-0.5 bg-zinc-700 rounded text-zinc-300 text-[11px]">h</kbd>{' '}
+            left,{' '}
+            <kbd className="px-1 py-0.5 bg-zinc-700 rounded text-zinc-300 text-[11px]">j</kbd>{' '}
+            down,{' '}
+            <kbd className="px-1 py-0.5 bg-zinc-700 rounded text-zinc-300 text-[11px]">k</kbd>{' '}
+            up,{' '}
+            <kbd className="px-1 py-0.5 bg-zinc-700 rounded text-zinc-300 text-[11px]">l</kbd>{' '}
+            right
+          </div>
+          <div>
+            <span className="text-[#B1B1B1] font-semibold">Words:</span>{' '}
+            <kbd className="px-1 py-0.5 bg-zinc-700 rounded text-zinc-300 text-[11px]">w</kbd>{' '}
+            next word,{' '}
+            <kbd className="px-1 py-0.5 bg-zinc-700 rounded text-zinc-300 text-[11px]">b</kbd>{' '}
+            back word,{' '}
+            <kbd className="px-1 py-0.5 bg-zinc-700 rounded text-zinc-300 text-[11px]">e</kbd>{' '}
+            end of word
+          </div>
+          <div>
+            <span className="text-[#B1B1B1] font-semibold">Counts:</span>{' '}
+            prefix any command with a number, e.g.{' '}
+            <kbd className="px-1 py-0.5 bg-zinc-700 rounded text-zinc-300 text-[11px]">2j</kbd>{' '}
+            moves down two lines
+          </div>
+          <div>
+            <span className="text-[#B1B1B1] font-semibold">Insert mode:</span>{' '}
+            <kbd className="px-1 py-0.5 bg-zinc-700 rounded text-zinc-300 text-[11px]">i</kbd>{' '}
+            insert at cursor,{' '}
+            <kbd className="px-1 py-0.5 bg-zinc-700 rounded text-zinc-300 text-[11px]">a</kbd>{' '}
+            append after,{' '}
+            <kbd className="px-1 py-0.5 bg-zinc-700 rounded text-zinc-300 text-[11px]">I</kbd>{' '}
+            insert at line start,{' '}
+            <kbd className="px-1 py-0.5 bg-zinc-700 rounded text-zinc-300 text-[11px]">A</kbd>{' '}
+            append at line end
+            <br />
+            <kbd className="px-1 py-0.5 bg-zinc-700 rounded text-zinc-300 text-[11px]">Esc</kbd>{' '}
+            return to normal (movement) mode
+          </div>
+          <div>
+            <span className="text-[#B1B1B1] font-semibold">Misc:</span>{' '}
+            <kbd className="px-1 py-0.5 bg-zinc-700 rounded text-zinc-300 text-[11px]">0</kbd>{' '}
+            line start,{' '}
+            <kbd className="px-1 py-0.5 bg-zinc-700 rounded text-zinc-300 text-[11px]">$</kbd>{' '}
+            line end,{' '}
+            <kbd className="px-1 py-0.5 bg-zinc-700 rounded text-zinc-300 text-[11px]">gg</kbd>{' '}
+            file start,{' '}
+            <kbd className="px-1 py-0.5 bg-zinc-700 rounded text-zinc-300 text-[11px]">G</kbd>{' '}
+            file end
+          </div>
+          <div className="pt-1">
+            <a
+              href="https://vim.rtorr.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#00992F] hover:underline"
+            >
+              Full cheat sheet (https://vim.rtorr.com/)
+            </a>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
