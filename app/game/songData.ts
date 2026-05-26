@@ -1,5 +1,7 @@
 import type { LyricLine } from './types';
 
+const LRC_OFFSET = 0.35;
+
 function stripPunctuation(s: string): string {
   return s.replace(/[(),.!?;:"\-—…\[\]{}]/g, '').trim().replace(/\s+/g, ' ');
 }
@@ -38,6 +40,16 @@ function parseLrc(raw: string): ParsedEntry[] {
   }
 
   entries.sort((a, b) => a.startTime - b.startTime);
+
+  for (let i = 1; i < entries.length; i++) {
+    if (entries[i].startTime < entries[i - 1].endTime) {
+      entries[i].startTime = entries[i - 1].endTime;
+      if (entries[i].endTime < entries[i].startTime) {
+        entries[i].endTime = entries[i].startTime + 0.01;
+      }
+    }
+  }
+
   return entries;
 }
 
@@ -57,8 +69,8 @@ export function loadSongData(): Promise<void> {
       const parsed = parseLrc(raw);
       _lyrics = parsed.map((entry) => ({
         text: entry.text,
-        startTime: Math.round(entry.startTime * 100) / 100,
-        endTime: Math.round(entry.endTime * 100) / 100,
+        startTime: Math.max(0, Math.round((entry.startTime - LRC_OFFSET) * 100) / 100),
+        endTime: Math.max(0.01, Math.round((entry.endTime - LRC_OFFSET) * 100) / 100),
       }));
       _totalLyrics = _lyrics.length;
 

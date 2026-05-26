@@ -17,33 +17,33 @@ export default function ScoreBoard() {
       : 'text-zinc-300';
 
   return (
-    <div className="flex items-center gap-5 px-3 py-2 text-xs">
-      <div className="flex items-center gap-1.5">
-        <span className="text-zinc-500 uppercase tracking-wider text-[10px]">Score</span>
-        <span className="text-sm font-bold text-white tabular-nums">
+    <div className="flex items-center gap-6 px-4 py-2.5">
+      <div className="flex items-center gap-2">
+        <span className="text-zinc-500 uppercase tracking-wider text-xs">Score</span>
+        <span className="text-base font-bold text-white tabular-nums">
           {state.score.toLocaleString()}
         </span>
       </div>
 
-      <div className="flex items-center gap-1.5">
-        <span className="text-zinc-500 uppercase tracking-wider text-[10px]">Combo</span>
-        <span className={`text-sm font-bold tabular-nums transition-colors duration-150 ${comboClass}`}>
+      <div className="flex items-center gap-2">
+        <span className="text-zinc-500 uppercase tracking-wider text-xs">Combo</span>
+        <span className={`text-base font-bold tabular-nums transition-colors duration-150 ${comboClass}`}>
           {state.combo}x
         </span>
       </div>
 
-      <div className="flex items-center gap-1.5">
-        <span className="text-zinc-500 uppercase tracking-wider text-[10px]">Max</span>
-        <span className="text-sm font-semibold text-zinc-400 tabular-nums">
+      <div className="flex items-center gap-2">
+        <span className="text-zinc-500 uppercase tracking-wider text-xs">Max</span>
+        <span className="text-base font-semibold text-zinc-400 tabular-nums">
           {state.maxCombo}x
         </span>
       </div>
 
       <div className="flex items-center gap-2">
-        <span className="text-zinc-500 uppercase tracking-wider text-[10px]">
+        <span className="text-zinc-500 uppercase tracking-wider text-xs">
           {state.lyricsCompleted}/{totalLyrics}
         </span>
-        <div className="w-16 h-1.5 bg-zinc-700 rounded-full overflow-hidden">
+        <div className="w-20 h-2 bg-zinc-700 rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}

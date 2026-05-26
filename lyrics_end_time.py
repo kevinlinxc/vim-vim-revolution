@@ -15,44 +15,11 @@ from pathlib import Path
 import whisperx
 from rapidfuzz import fuzz
 
-# ============================================================
-# Lyrics Forced Alignment Script
-#
-# Features:
-# - MP3/WAV/etc input
-# - TXT or LRC lyric input
-# - Phrase-level fuzzy matching
-# - Existing LRC timestamp support
-# - Timestamp fallback when alignment fails
-# - Produces:
-#
-#   [00:01.04]-[00:05.82] lyric line
-#
-# Usage:
-#
-# ./align_lyrics.py song.mp3 lyrics.lrc --language en
-#
-# Respect existing LRC timestamps:
-#
-# ./align_lyrics.py song.mp3 lyrics.lrc \
-#   --respect-input-timestamps
-#
-# CPU mode:
-#
-# ./align_lyrics.py song.mp3 lyrics.lrc \
-#   --device cpu
-#
-# ============================================================
-
 DEFAULT_DEVICE = "cpu"
 MODEL_NAME = "medium"
 
 LRC_PATTERN = re.compile(r"\[(\d+):(\d+(?:\.\d+)?)\]")
 
-
-# ============================================================
-# Helpers
-# ============================================================
 
 def format_timestamp(seconds: float) -> str:
     minutes = int(seconds // 60)
@@ -76,45 +43,15 @@ def normalize_ing(text: str) -> str:
 
 def clean_text(text: str) -> str:
     text = text.lower()
-
-    # strip parentheses but keep their content for matching
     text = text.replace("(", " ").replace(")", " ")
-
-    # normalize apostrophes
-    text = text.replace("’", "'")
-
-    # normalize slang
+    text = text.replace("\u2019", "'")
     text = normalize_ing(text)
-
-    # remove punctuation
     text = re.sub(r"[^\w\s']", " ", text)
-
-    # collapse spaces
     text = re.sub(r"\s+", " ", text).strip()
-
     return text
 
 
-# ============================================================
-# Lyrics loading
-# ============================================================
-
 def load_lyrics(path: str):
-    """
-    Supports:
-    - plain txt
-    - lrc
-
-    Returns:
-        [
-            {
-                "original": str,
-                "cleaned": str,
-                "input_timestamp": float | None,
-            }
-        ]
-    """
-
     lines = []
 
     with open(path, "r", encoding="utf-8") as f:
@@ -129,7 +66,6 @@ def load_lyrics(path: str):
         timestamps = list(LRC_PATTERN.finditer(raw_line))
 
         input_timestamp = None
-
         if timestamps:
             input_timestamp = parse_lrc_timestamp(timestamps[0])
 
@@ -142,6 +78,7 @@ def load_lyrics(path: str):
                         "original": "",
                         "cleaned": "",
                         "input_timestamp": input_timestamp,
+                        "is_marker": True,
                     }
                 )
             continue
@@ -156,22 +93,18 @@ def load_lyrics(path: str):
                 "original": lyric_text,
                 "cleaned": cleaned,
                 "input_timestamp": input_timestamp,
+                "is_marker": False,
             }
         )
 
     return lines
 
 
-# ============================================================
-# Alignment processing
-# ============================================================
-
 def flatten_words(segments):
     words = []
 
     for segment in segments:
         for word in segment.get("words", []):
-
             if "start" not in word or "end" not in word:
                 continue
 
@@ -191,105 +124,80 @@ def flatten_words(segments):
     return words
 
 
-# ============================================================
-# Phrase-level matcher
-# ============================================================
-
 def find_word_index_for_time(aligned_words, timestamp):
     best_idx = 0
     best_diff = float("inf")
+
     for i, w in enumerate(aligned_words):
         diff = abs(w["start"] - timestamp)
         if diff < best_diff:
             best_diff = diff
             best_idx = i
+
     return best_idx
 
 
-def match_line_to_words(
-    line_words,
-    aligned_words,
-    start_index,
-    max_search=150,
-):
-    """
-    Phrase-level fuzzy matcher.
-    """
-
+def find_end_time(line_words, aligned_words, start_time):
     target = " ".join(line_words)
-
-    best_score = -1
-    best_range = None
+    anchor_idx = find_word_index_for_time(aligned_words, start_time)
 
     min_window = max(1, len(line_words) - 3)
     max_window = min(len(line_words) + 6, 24)
 
-    search_end = min(start_index + max_search, len(aligned_words))
+    search_start = max(0, anchor_idx - 10)
+    search_end = min(anchor_idx + 80, len(aligned_words))
 
-    for i in range(start_index, search_end):
+    best_score = -1
+    best_end_time = None
+
+    for i in range(search_start, search_end):
+
+        time_offset = abs(aligned_words[i]["start"] - start_time)
+        if time_offset > 2.5:
+            continue
 
         for window_size in range(min_window, max_window + 1):
 
-            chunk = aligned_words[i:i + window_size]
+            chunk = aligned_words[i : i + window_size]
 
             if not chunk:
                 continue
 
             candidate = " ".join(w["word"] for w in chunk)
-
             score = fuzz.ratio(target, candidate)
 
-            distance_penalty = (i - start_index) * 0.5
+            if score > best_score:
+                best_score = score
+                best_end_time = chunk[-1]["end"]
 
-            adjusted_score = score - distance_penalty
+    if best_score < 50:
+        return None
 
-            if adjusted_score > best_score:
-                best_score = adjusted_score
-                best_range = (i, i + window_size)
-
-    if best_range is None or best_score < 58:
-        return None, None, start_index
-
-    start_i, end_i = best_range
-
-    return (
-        aligned_words[start_i]["start"],
-        aligned_words[end_i - 1]["end"],
-        end_i,
-    )
+    return best_end_time
 
 
-# ============================================================
-# Main
-# ============================================================
+def find_next_timestamp(lyrics, start_idx):
+    for j in range(start_idx + 1, len(lyrics)):
+        ts = lyrics[j]["input_timestamp"]
+        if ts is not None:
+            return ts
+    return None
+
 
 def main():
     parser = argparse.ArgumentParser()
-
     parser.add_argument("audio")
     parser.add_argument("lyrics")
-
     parser.add_argument(
         "--device",
         default=DEFAULT_DEVICE,
         choices=["cpu", "cuda"],
     )
-
     parser.add_argument(
         "--language",
         default="en",
         help="Language code like en, ja, es",
     )
-
-    parser.add_argument(
-        "--respect-input-timestamps",
-        action="store_true",
-        help=(
-            "Use existing LRC timestamps as start times "
-            "instead of Whisper alignment starts"
-        ),
-    )
-
     args = parser.parse_args()
 
     print("Loading lyrics...")
@@ -338,85 +246,58 @@ def main():
 
     output_lines = []
 
-    current_word_index = 0
-
-    print("Matching lyric lines...")
-
     for i, lyric in enumerate(lyrics):
 
-        if not lyric["cleaned"]:
+        if lyric["is_marker"]:
+            continue
+
+        start_time = lyric["input_timestamp"]
+
+        if start_time is None:
+            print(f"No start timestamp, skipping: {lyric['original']}")
             continue
 
         line_words = lyric["cleaned"].split()
 
-        if lyric["input_timestamp"] is not None:
-            anchor_idx = find_word_index_for_time(
-                aligned_words, lyric["input_timestamp"]
-            )
-            search_start = anchor_idx
-            search_window = 80
-        else:
-            search_start = current_word_index
-            search_window = 150
+        end_time = find_end_time(line_words, aligned_words, start_time)
 
-        start_time, end_time, match_end = (
-            match_line_to_words(
-                line_words,
-                aligned_words,
-                search_start,
-                search_window,
-            )
-        )
+        # ============================================================
+        # Validate end time: discard if it extends past next
+        # line's start
+        # ============================================================
 
-        # ====================================================
-        # Fallback to original LRC timestamps
-        # ====================================================
+        if end_time is not None:
+            next_ts = find_next_timestamp(lyrics, i)
 
-        if start_time is None or end_time is None:
-
-            current_ts = lyric["input_timestamp"]
-            next_ts = None
-
-            if i + 1 < len(lyrics):
-                next_ts = lyrics[i + 1]["input_timestamp"]
-
-            if current_ts is not None and next_ts is not None:
-
+            if next_ts is not None and end_time > next_ts:
                 print(
-                    f"Fallback timestamps used: "
+                    f"End time {end_time:.2f} > next start "
+                    f"{next_ts:.2f}, discarding: "
                     f"{lyric['original']}"
                 )
+                end_time = None
 
-                output_lines.append(
-                    f"[{format_timestamp(current_ts)}]-"
-                    f"[{format_timestamp(next_ts)}] "
+        # ============================================================
+        # Fallback: next timestamp (including markers) as end time
+        # ============================================================
+
+        if end_time is None:
+            next_ts = find_next_timestamp(lyrics, i)
+
+            if next_ts is not None:
+                end_time = next_ts
+                print(
+                    f"Fallback end time for: "
                     f"{lyric['original']}"
                 )
-
             else:
-                print(f"Could not align: {lyric['original']}")
+                end_time = start_time + 3.0
 
-            continue
-
-        current_word_index = match_end
-
-        # ====================================================
-        # Optionally preserve original LRC starts
-        # ====================================================
-
-        if (
-            args.respect_input_timestamps
-            and lyric["input_timestamp"] is not None
-        ):
-            start_time = lyric["input_timestamp"]
-
-        formatted = (
+        output_lines.append(
             f"[{format_timestamp(start_time)}]-"
             f"[{format_timestamp(end_time)}] "
             f"{lyric['original']}"
         )
-
-        output_lines.append(formatted)
 
     output_path = Path(args.audio).with_suffix(".lrc")
 

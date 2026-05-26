@@ -5,6 +5,7 @@ import { useGame } from './GameProvider';
 import MonacoEditor, { type MonacoEditorHandle } from './MonacoEditor';
 import { useGameEngine } from './useGameEngine';
 import ScoreBoard from './ScoreBoard';
+import LyricDisplay from './LyricDisplay';
 import FeedbackOverlay from './FeedbackOverlay';
 import { useNickname } from './NicknameProvider';
 import Leaderboard from './Leaderboard';
@@ -69,6 +70,9 @@ export default function GameContent() {
     startGame,
     togglePause,
     restartGame,
+    getCurrentLyricText,
+    getNextLyricText,
+    getCurrentLineNumber,
     audioTime,
     audioDuration,
     feedbacks,
@@ -117,6 +121,10 @@ export default function GameContent() {
 
     return () => { cancelled = true }
   }, [state.phase])
+
+  const currentLyric = getCurrentLyricText()
+  const nextLyric = getNextLyricText()
+  const currentLine = getCurrentLineNumber()
 
   const handleSubmitScore = useCallback(async (handle: string) => {
     setSubmitting(true);
@@ -274,6 +282,11 @@ export default function GameContent() {
           <div className="flex-1">
             <ScoreBoard />
           </div>
+          <LyricDisplay
+            currentLyric={currentLyric}
+            nextLyric={nextLyric}
+            currentLine={currentLine}
+          />
           <button
             onClick={openLeaderboard}
             className="px-3 py-1.5 mr-3 rounded text-xs font-medium bg-zinc-700 hover:bg-zinc-600 text-zinc-300 transition-colors"
