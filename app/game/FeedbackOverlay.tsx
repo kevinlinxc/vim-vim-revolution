@@ -13,7 +13,9 @@ interface FeedbackOverlayProps {
 const RATING_STYLE: Record<string, { label: string; color: string; bg: string }> = {
   perfect: { label: 'perfect!', color: 'text-yellow-300', bg: 'bg-yellow-500/20' },
   good: { label: 'good!', color: 'text-green-400', bg: 'bg-green-500/15' },
+  okay: { label: 'okay', color: 'text-blue-400', bg: 'bg-blue-500/15' },
   bad: { label: 'bad', color: 'text-orange-400', bg: 'bg-orange-500/15' },
+  terrible: { label: 'terrible', color: 'text-red-300', bg: 'bg-red-500/10' },
   miss: { label: 'miss!', color: 'text-red-400', bg: 'bg-red-500/15' },
 };
 

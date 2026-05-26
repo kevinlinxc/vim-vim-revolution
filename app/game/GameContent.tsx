@@ -71,8 +71,6 @@ export default function GameContent() {
     togglePause,
     restartGame,
     getCurrentLyricText,
-    getNextLyricText,
-    getCurrentLineNumber,
     audioTime,
     audioDuration,
     feedbacks,
@@ -123,8 +121,6 @@ export default function GameContent() {
   }, [state.phase])
 
   const currentLyric = getCurrentLyricText()
-  const nextLyric = getNextLyricText()
-  const currentLine = getCurrentLineNumber()
 
   const handleSubmitScore = useCallback(async (handle: string) => {
     setSubmitting(true);
@@ -219,7 +215,7 @@ export default function GameContent() {
                   Play Again
                 </button>
                 <a
-                  href={`https://x.com/intent/tweet?text=${encodeURIComponent(`Just got ${state.score} score on vimvimrevolution.com!`)}`}
+                  href={`https://x.com/intent/tweet?text=${encodeURIComponent(`Just got a score of ${state.score}  on vimvimrevolution.com!`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-6 py-2.5 bg-zinc-700 hover:bg-zinc-600 text-white font-semibold rounded-lg transition-colors inline-flex items-center gap-2"
@@ -278,20 +274,16 @@ export default function GameContent() {
           </div>
         )}
 
-        <div className="flex items-center bg-zinc-900 border-b border-zinc-800">
-          <div className="flex-1">
-            <ScoreBoard />
+        <div className="flex items-center gap-3 px-4 py-2 bg-zinc-900 border-b border-zinc-800">
+          <div className="flex-1 min-w-0">
+            <LyricDisplay currentLyric={currentLyric} />
           </div>
-          <LyricDisplay
-            currentLyric={currentLyric}
-            nextLyric={nextLyric}
-            currentLine={currentLine}
-          />
+          <ScoreBoard />
           <button
             onClick={openLeaderboard}
-            className="px-3 py-1.5 mr-3 rounded text-xs font-medium bg-zinc-700 hover:bg-zinc-600 text-zinc-300 transition-colors"
+            className="px-3 py-1.5 rounded text-xs font-medium bg-zinc-700 hover:bg-zinc-600 text-zinc-300 transition-colors shrink-0"
           >
-            Leaderboard
+            LB
           </button>
         </div>
 
@@ -365,7 +357,6 @@ function NameEntryForm({
       className="flex items-center gap-2 w-full"
     >
       <input
-        autoFocus
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder="Enter nickname"

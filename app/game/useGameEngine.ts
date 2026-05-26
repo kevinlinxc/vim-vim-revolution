@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useGame } from './GameProvider';
-import { lyrics, totalLyrics } from './songData';
+import { lyrics, totalLyrics, LRC_OFFSET } from './songData';
 import type { MonacoEditorHandle } from './MonacoEditor';
 import type { editor } from 'monaco-editor';
 import type { FeedbackEvent, FeedbackRating } from './types';
@@ -21,6 +21,7 @@ export function useGameEngine(
   const typedTextRef = useRef<Map<number, string>>(new Map());
   const preActiveIndicesRef = useRef<Set<number>>(new Set());
   const audioEndedRef = useRef(false);
+  const finishTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [audioTime, setAudioTime] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
@@ -233,7 +234,9 @@ export function useGameEngine(
           const ratio = windowDuration > 0 ? timeRemaining / windowDuration : 0;
           let rating: FeedbackRating;
           if (ratio >= 0.5) rating = 'perfect';
-          else if (ratio >= 0.2) rating = 'good';
+          else if (ratio >= 0.3) rating = 'good';
+          else if (ratio >= 0.1) rating = 'okay';
+          else if (matchLen >= target.length) rating = 'okay';
           else rating = 'bad';
 
           const fid = feedbackIdRef.current++;
@@ -295,9 +298,17 @@ export function useGameEngine(
             rating = 'good';
             points = Math.round(100 * percentage);
             dispatch({ type: 'COMPLETE_LYRIC', lyricIndex: currentIdx, timeRemaining: 0 });
+          } else if (percentage >= 0.55) {
+            rating = 'okay';
+            points = Math.round(75 * percentage);
+            dispatch({ type: 'COMPLETE_LYRIC', lyricIndex: currentIdx, timeRemaining: 0 });
           } else if (percentage >= 0.4) {
             rating = 'bad';
             points = Math.round(50 * percentage);
+            dispatch({ type: 'BREAK_COMBO' });
+          } else if (percentage >= 0.2) {
+            rating = 'terrible';
+            points = Math.round(25 * percentage);
             dispatch({ type: 'BREAK_COMBO' });
           } else {
             rating = 'miss';
@@ -316,7 +327,9 @@ export function useGameEngine(
         }
         const next = currentIdx + 1;
         if (next >= totalLyrics) {
-          dispatch({ type: 'FINISH' });
+          finishTimeoutRef.current = setTimeout(() => {
+            dispatch({ type: 'FINISH' });
+          }, LRC_OFFSET * 1000);
         } else {
           dispatch({ type: 'ADVANCE_LYRIC' });
         }
@@ -350,6 +363,7 @@ export function useGameEngine(
 
     const handleEnded = () => {
       audioEndedRef.current = true;
+      if (finishTimeoutRef.current) clearTimeout(finishTimeoutRef.current);
       dispatch({ type: 'FINISH' });
     };
 
@@ -371,6 +385,7 @@ export function useGameEngine(
   }, [audioRef, dispatch]);
 
   const startGame = useCallback(() => {
+    if (finishTimeoutRef.current) clearTimeout(finishTimeoutRef.current);
     typedTextRef.current = new Map();
     preActiveIndicesRef.current = new Set();
     dispatch({ type: 'START_COUNTDOWN' });
@@ -407,6 +422,7 @@ export function useGameEngine(
   }, [state.phase, audioRef, dispatch]);
 
   const restartGame = useCallback(() => {
+    if (finishTimeoutRef.current) clearTimeout(finishTimeoutRef.current);
     const audio = audioRef.current;
     if (audio) {
       audio.pause();

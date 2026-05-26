@@ -38,7 +38,7 @@ export type GameAction =
   | { type: 'BREAK_COMBO' }
   | { type: 'INIT_DATA' };
 
-export type FeedbackRating = 'perfect' | 'good' | 'bad' | 'miss';
+export type FeedbackRating = 'perfect' | 'good' | 'okay' | 'bad' | 'terrible' | 'miss';
 
 export interface FeedbackEvent {
   id: number;
