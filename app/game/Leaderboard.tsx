@@ -7,7 +7,15 @@ interface LeaderboardEntry {
   created_at: string
 }
 
-export default function Leaderboard({ entries }: { entries: LeaderboardEntry[] }) {
+export default function Leaderboard({ entries, loading }: { entries: LeaderboardEntry[]; loading?: boolean }) {
+  if (loading) {
+    return (
+      <p className="text-sm text-zinc-500 text-center py-2">
+        Loading...
+      </p>
+    )
+  }
+
   if (entries.length === 0) {
     return (
       <p className="text-sm text-zinc-500 text-center py-2">

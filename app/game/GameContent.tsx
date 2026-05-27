@@ -60,12 +60,14 @@ export default function GameContent() {
   const [gameKey, setGameKey] = useState(0);
 
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [lbLoading, setLbLoading] = useState(false);
   const [lbMessage, setLbMessage] = useState('');
   const [lbError, setLbError] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showLb, setShowLb] = useState(false);
   const [lbData, setLbData] = useState<LeaderboardEntry[]>([]);
+  const [lbDataLoading, setLbDataLoading] = useState(false);
   const [hideGameOver, setHideGameOver] = useState(false);
 
   const {
@@ -98,10 +100,12 @@ export default function GameContent() {
 
   const openLeaderboard = useCallback(() => {
     setShowLb(true);
+    setLbDataLoading(true);
     fetch('/api/leaderboard')
       .then(r => r.json())
       .then(data => setLbData(data))
-      .catch(() => { });
+      .catch(() => { })
+      .finally(() => setLbDataLoading(false));
   }, []);
 
   const closeLeaderboard = useCallback(() => {
@@ -112,6 +116,8 @@ export default function GameContent() {
     if (state.phase !== 'finished') return
 
     let cancelled = false
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLbLoading(true)
 
     fetch('/api/leaderboard')
       .then(r => r.json())
@@ -119,6 +125,9 @@ export default function GameContent() {
         if (!cancelled) setLeaderboard(data)
       })
       .catch(() => { })
+      .finally(() => {
+        if (!cancelled) setLbLoading(false)
+      })
 
     return () => { cancelled = true }
   }, [state.phase])
@@ -257,7 +266,7 @@ export default function GameContent() {
 
               <div className="mt-4 pt-4 border-t border-zinc-700 w-full min-w-[300px]">
                 <div className="text-sm font-semibold text-zinc-400 mb-3">Leaderboard</div>
-                <Leaderboard entries={leaderboard} />
+                <Leaderboard entries={leaderboard} loading={lbLoading} />
 
                 <div className="mt-4 pt-4 border-t border-zinc-700">
                   {!submitted ? (
@@ -311,7 +320,7 @@ export default function GameContent() {
                   Close
                 </button>
               </div>
-              <Leaderboard entries={lbData} />
+              <Leaderboard entries={lbData} loading={lbDataLoading} />
             </div>
           </div>
         )}
