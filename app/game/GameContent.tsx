@@ -55,6 +55,7 @@ export default function GameContent() {
   const { nickname, setNickname } = useNickname();
   const editorRef = useRef<MonacoEditorHandle>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const countdownAudioRef = useRef<HTMLAudioElement>(null);
   const [editorReady, setEditorReady] = useState(false);
   const [gameKey, setGameKey] = useState(0);
 
@@ -76,7 +77,7 @@ export default function GameContent() {
     audioDuration,
     feedbacks,
     dismissFeedback,
-  } = useGameEngine(editorRef, audioRef, editorReady);
+  } = useGameEngine(editorRef, audioRef, countdownAudioRef, editorReady);
 
   const boardText = useMemo(() => state.board.join('\n'), [state.board]);
   const handleEditorChange = useCallback(() => { }, []);
@@ -106,13 +107,6 @@ export default function GameContent() {
   const closeLeaderboard = useCallback(() => {
     setShowLb(false);
   }, []);
-
-  useEffect(() => {
-    if (state.phase === 'finished') {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setHideGameOver(false);
-    }
-  }, [state.phase]);
 
   useEffect(() => {
     if (state.phase !== 'finished') return
@@ -166,11 +160,22 @@ export default function GameContent() {
   const canPause = state.phase === 'playing' || state.phase === 'paused';
   const isIdle = state.phase === 'idle';
 
+  useEffect(() => {
+    if (state.phase === 'countdown' && state.countdownValue === 3) {
+      countdownAudioRef.current?.play().catch(() => {});
+    }
+  }, [state.phase, state.countdownValue]);
+
   return (
     <div className="flex flex-col h-screen bg-zinc-950 text-white">
       <audio
         ref={audioRef}
         src="/dont-stop-me-now.mp3"
+        preload="auto"
+      />
+      <audio
+        ref={countdownAudioRef}
+        src="/3-2-1-sound.mp3"
         preload="auto"
       />
 

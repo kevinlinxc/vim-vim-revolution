@@ -12,6 +12,7 @@ const PRE_ACTIVE_SECONDS = 3;
 export function useGameEngine(
   editorRef: React.RefObject<MonacoEditorHandle | null>,
   audioRef: React.RefObject<HTMLAudioElement | null>,
+  countdownAudioRef: React.RefObject<HTMLAudioElement | null>,
   editorReady: boolean,
 ) {
   const { state, dispatch } = useGame();
@@ -402,6 +403,8 @@ export function useGameEngine(
     preActiveIndicesRef.current = new Set();
     dispatch({ type: 'START_COUNTDOWN' });
 
+    countdownAudioRef.current?.play().catch(() => {});
+
     editorRef.current?.getEditor()?.focus();
 
     let count = 3;
@@ -418,7 +421,7 @@ export function useGameEngine(
         dispatch({ type: 'SET_COUNTDOWN', value: count });
       }
     }, 800);
-  }, [dispatch, audioRef, editorRef]);
+  }, [dispatch, audioRef, editorRef, countdownAudioRef]);
 
   const togglePause = useCallback(() => {
     const audio = audioRef.current;
@@ -452,6 +455,7 @@ export function useGameEngine(
     setTimeout(() => {
       let count = 3;
       dispatch({ type: 'SET_COUNTDOWN', value: count });
+      countdownAudioRef.current?.play().catch(() => {});
       editorRef.current?.getEditor()?.focus();
       countdownRef.current = setInterval(() => {
         count--;
@@ -466,7 +470,7 @@ export function useGameEngine(
         }
       }, 800);
     }, 100);
-  }, [audioRef, dispatch, editorRef]);
+  }, [audioRef, dispatch, editorRef, countdownAudioRef]);
 
   const getCurrentLyricText = useCallback((): string => {
     if (state.currentLyricIndex >= totalLyrics) return '';
