@@ -232,17 +232,12 @@ export function useGameEngine(
             : 0;
           const isEarly = audio ? lyrics[i].startTime - audio.currentTime >= 3 : false;
 
-          const windowDuration = lyrics[i].endTime - lyrics[i].startTime;
-          const ratio = windowDuration > 0 ? timeRemaining / windowDuration : 0;
           let rating: FeedbackRating;
           if (isEarly) {
             rating = 'early';
-          } else if (ratio >= 0.5) {
+          } else {
             rating = 'perfect';
-          } else if (ratio >= 0.3) rating = 'good';
-          else if (ratio >= 0.1) rating = 'okay';
-          else if (matchLen >= target.length) rating = 'okay';
-          else rating = 'bad';
+          }
 
           const fid = feedbackIdRef.current++;
           const pts = Math.round(100 + timeRemaining * 10);
@@ -306,23 +301,19 @@ export function useGameEngine(
             rating = 'perfect';
             points = Math.round(100);
             dispatch({ type: 'COMPLETE_LYRIC', lyricIndex: currentIdx, timeRemaining: 0 });
-          } else if (percentage >= 0.9) {
-            rating = 'perfect';
-            points = Math.round(100 * percentage);
-            dispatch({ type: 'COMPLETE_LYRIC', lyricIndex: currentIdx, timeRemaining: 0 });
-          } else if (percentage >= 0.7) {
+          } else if (percentage >= 0.5) {
             rating = 'good';
             points = Math.round(100 * percentage);
             dispatch({ type: 'COMPLETE_LYRIC', lyricIndex: currentIdx, timeRemaining: 0 });
-          } else if (percentage >= 0.55) {
+          } else if (percentage >= 0.3) {
             rating = 'okay';
             points = Math.round(75 * percentage);
             dispatch({ type: 'COMPLETE_LYRIC', lyricIndex: currentIdx, timeRemaining: 0 });
-          } else if (percentage >= 0.4) {
+          } else if (percentage >= 0.15) {
             rating = 'bad';
             points = Math.round(50 * percentage);
             dispatch({ type: 'BREAK_COMBO' });
-          } else if (percentage >= 0.2) {
+          } else if (percentage >= 0.05) {
             rating = 'terrible';
             points = Math.round(25 * percentage);
             dispatch({ type: 'BREAK_COMBO' });
