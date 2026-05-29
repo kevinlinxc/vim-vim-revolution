@@ -69,6 +69,7 @@ export default function GameContent() {
   const [lbData, setLbData] = useState<LeaderboardEntry[]>([]);
   const [lbDataLoading, setLbDataLoading] = useState(false);
   const [hideGameOver, setHideGameOver] = useState(false);
+  const [showSongSelect, setShowSongSelect] = useState(false);
 
   const {
     startGame,
@@ -95,6 +96,7 @@ export default function GameContent() {
     setLbMessage('');
     setLbError(false);
     setHideGameOver(false);
+    setShowSongSelect(false);
     restartGame();
   }, [restartGame]);
 
@@ -111,6 +113,21 @@ export default function GameContent() {
   const closeLeaderboard = useCallback(() => {
     setShowLb(false);
   }, []);
+
+  useEffect(() => {
+    if (state.phase !== 'idle') return
+
+    let cancelled = false
+
+    fetch('/api/leaderboard')
+      .then(r => r.json())
+      .then(data => {
+        if (!cancelled) setLeaderboard(data)
+      })
+      .catch(() => { })
+
+    return () => { cancelled = true }
+  }, [state.phase]);
 
   useEffect(() => {
     if (state.phase !== 'finished') return
@@ -189,29 +206,27 @@ export default function GameContent() {
       />
 
       <div className="flex flex-col h-full relative">
-        {isIdle && (
-          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-zinc-950/90 pointer-events-auto">
+        {isIdle && !showSongSelect && (
+          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-8 bg-zinc-950/95 pointer-events-auto">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/vim-vim-revolution-logo.png"
               alt="Vim Vim Revolution"
-              className="w-48 h-48 object-contain"
+              className="w-36 h-36 object-contain"
             />
             <h1 className="text-4xl font-bold tracking-tight text-white">
               Vim Vim Revolution
             </h1>
-            <p className="text-[#B1B1B1] text-base max-w-md text-center">
+            <p className="text-[#B1B1B1] text-base text-center max-w-sm">
               Type the lyrics in time with the song, in a Vim editor!
             </p>
             <button
-              onClick={startGame}
-              className="px-10 py-3 bg-[#00992F] hover:bg-[#007a25] text-white font-semibold rounded-lg text-xl"
+              onClick={() => setShowSongSelect(true)}
+              className="px-14 py-3 bg-[#00992F] hover:bg-[#007a25] text-white font-semibold rounded-lg text-xl"
             >
-              Start
+              Play
             </button>
-            <HintsDropdown />
-
-            <span className="text-xs text-zinc-600 mt-4">
+            <span className="text-xs text-zinc-600">
               Created by{' '}
               <a
                 href="https://x.com/linguinelabs"
@@ -222,6 +237,70 @@ export default function GameContent() {
                 @linguinelabs
               </a>
             </span>
+          </div>
+        )}
+
+        {isIdle && showSongSelect && (
+          <div className="absolute inset-0 z-50 flex bg-zinc-950/95 pointer-events-auto">
+            <div className="flex-1 flex flex-col justify-center p-8">
+              <div className="flex flex-col gap-4 max-w-xs mx-auto">
+                <div className="flex items-center gap-3 cursor-pointer hover:opacity-80" onClick={() => setShowSongSelect(false)}>
+                  <span className="text-zinc-500 text-lg">←</span>
+                  <span className="text-sm text-[#B1B1B1]">Back</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/vim-vim-revolution-logo.png"
+                    alt="Vim Vim Revolution"
+                    className="w-12 h-12 object-contain"
+                  />
+                  <h1 className="text-xl font-bold tracking-tight text-white">
+                    Vim Vim Revolution
+                  </h1>
+                </div>
+                <p className="text-[#B1B1B1] text-sm">
+                  Type the lyrics in time with the song, in a Vim editor!
+                </p>
+                <HintsDropdown />
+                <span className="text-xs text-zinc-600 mt-4">
+                  Created by{' '}
+                  <a
+                    href="https://x.com/linguinelabs"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-[#B1B1B1]"
+                  >
+                    @linguinelabs
+                  </a>
+                </span>
+              </div>
+            </div>
+
+            <div className="flex-1 flex flex-col justify-center p-8 border-x border-zinc-800">
+              <div className="flex flex-col gap-6 max-w-xs mx-auto w-full">
+                <div className="text-sm font-semibold text-[#B1B1B1] uppercase tracking-wider text-center">Select Song</div>
+                <button className="w-full px-5 py-4 rounded-lg bg-[#00992F] text-white text-base font-semibold text-left border border-[#00a83a]">
+                  Don&apos;t Stop Me Now
+                  <span className="block text-sm text-white/70 mt-1">Queen</span>
+                </button>
+                <button
+                  onClick={startGame}
+                  className="w-full py-3 bg-[#00992F] hover:bg-[#007a25] text-white font-semibold rounded-lg text-xl"
+                >
+                  Start
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 flex flex-col justify-center p-8">
+              <div className="flex flex-col gap-3 max-w-xs mx-auto w-full max-h-full overflow-y-auto">
+                <div className="text-xs font-semibold text-[#B1B1B1] uppercase tracking-wider">
+                  Leaderboard — Don&apos;t Stop Me Now
+                </div>
+                <Leaderboard entries={leaderboard} />
+              </div>
+            </div>
           </div>
         )}
 
